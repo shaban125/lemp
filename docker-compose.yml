@@ -22,7 +22,7 @@ services:
     build:
       context: ./.docker/php
       dockerfile: Dockerfile
-    image: frehman/phpimages:${TAG}
+    image: shaban125/cicd-pipline:999
     working_dir: /var/www/php
     volumes:
       - ./src:/var/www/php
