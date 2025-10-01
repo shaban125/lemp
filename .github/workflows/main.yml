@@ -6,7 +6,7 @@ on:
     branches: [main]
 jobs:
   build:
-    runs-on: shaban321
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
       - name: Build the Docker Images
