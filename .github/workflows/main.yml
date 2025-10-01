@@ -1,28 +1,35 @@
 name: LEMP Server
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches:
+    - main
 jobs:
-  build:
-    runs-on: self-hosted
+  Build-App:
+    runs-on: ubuntu-latest
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v3
-      - name: Build the Docker Images
+      - name: Install Docker Compose on the Runner
         run: |
-          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
-         
-      - name: Build the Docker images
-        run: docker-compose build
+         mkdir -p ~/.docker/cli-plugins/
+         curl -SL https://github.com/docker/compose/releases/download/v2.3.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+         chmod +x ~/.docker/cli-plugins/docker-compose
+         docker compose version
         
-      - name: Logging into the Docker Hub
-        uses: docker/login-action@v1
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-        
-      - name: Push the Docker Images to the Docker Hub
-        run: docker-compose push
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 
+
+      - name: Login to Amazon Elastic Container Registry
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build Docker Images with their respective tags
+        run: docker compose build
+          
+      - name: Push Docker images to Amazon Elastic Container Registry
+        run: docker compose push   
